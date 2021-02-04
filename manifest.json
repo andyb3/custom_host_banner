@@ -1,0 +1,40 @@
+{
+  "name": "Custom Host Banner",
+  "version": "0.1.0",
+  "description": "Display a custom banner based on the host. Useful for developers/QA engineers switching between environments.",
+  "permissions": ["storage"],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "page.js"
+      ],
+      "css": [
+        "page.css"
+      ]
+    }
+  ],
+  "browser_action": {
+    "default_popup": "options.html",
+    "default_icon": {
+      "16": "images/banner16.png",
+      "32": "images/banner32.png",
+      "48": "images/banner48.png",
+      "128": "images/banner128.png"
+    }
+  },
+  "icons": {
+    "16": "images/banner16.png",
+    "32": "images/banner32.png",
+    "48": "images/banner48.png",
+    "128": "images/banner128.png"
+  },
+  "options_page": "options.html",
+  "manifest_version": 2
+}

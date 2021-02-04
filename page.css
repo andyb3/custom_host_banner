@@ -1,0 +1,13 @@
+.banner-alert {
+  font-family: sans-serif;
+  text-align: center;
+  color: white;
+  z-index: 99999;
+  min-height: 15px;
+}
+
+.sticky {
+    position: fixed;
+    top: 0;
+    width: 100%;
+  }
