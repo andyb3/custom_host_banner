@@ -44,12 +44,12 @@ function banner_text() {
 function add_host_row(data) {
     // creates row in table for user to add a new host
     var new_row = document.createElement('tr');
-    // create text input cell for user to enter new host name
+    // create text input cell for user to enter new host
     var new_host_cell = document.createElement('td');
     var new_host_text = document.createElement('input');
     new_host_text.style.width = "250px";
     new_host_text.type = "text";
-    new_host_text.placeholder = "Enter hostname or URL";
+    new_host_text.placeholder = "Enter host or URL";
     new_host_cell.appendChild(new_host_text);
     // create text input cell for user to enter banner text
     var banner_text_cell = document.createElement('td');
@@ -67,8 +67,8 @@ function add_host_row(data) {
     button.style.color = "green";
     // add event listener to save new host config when clicked
     button.addEventListener('click', function () {
-        // extract hostname from url
-        var new_host = new_host_text.value.replace(/(http:\/\/|https:\/\/)/, "").match(/([A-Za-z0-9-\.]+)/)[0];
+        // extract host from url
+        var new_host = new_host_text.value.replace(/(http:\/\/|https:\/\/)/, "").match(/([A-Za-z0-9-\.:]+)/)[0];
         if (new_host) {
             // save new host to hosts config
             data.hosts[new_host] = {
@@ -96,7 +96,7 @@ function add_host_row(data) {
 function edit_host_row(host, data) {
     // creates row in table for user to edit config for existing host 
     var host_row = document.createElement('tr');
-    // create cell to display the host name
+    // create cell to display the host
     var host_cell = document.createElement('td');
     host_cell.innerText = host;
     // create dropdown for user to change banner colour
