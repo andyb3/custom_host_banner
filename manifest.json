@@ -2,15 +2,20 @@
   "name": "Custom Host Banner",
   "version": "0.1.0",
   "description": "Display a custom banner based on the host. Useful for developers/QA engineers switching between environments.",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "background": {
-    "scripts": ["background.js"],
+    "scripts": [
+      "background.js"
+    ],
     "persistent": false
   },
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "http://*/*",
+        "https://*/*"
       ],
       "js": [
         "page.js"
