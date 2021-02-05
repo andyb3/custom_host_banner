@@ -1,4 +1,4 @@
-.banner-alert {
+#host-banner {
   font-family: sans-serif;
   text-align: center;
   color: white;
@@ -6,7 +6,7 @@
   min-height: 15px;
 }
 
-.sticky {
+.sticky-banner {
     position: fixed;
     top: 0;
     width: 100%;
