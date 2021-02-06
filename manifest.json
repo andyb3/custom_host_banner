@@ -1,7 +1,7 @@
 {
   "name": "Custom Host Banner",
   "version": "0.1.0",
-  "description": "Display a custom banner based on the host. Useful for developers/QA engineers switching between environments.",
+  "description": "Display a custom banner on the page based on the host.",
   "permissions": [
     "storage"
   ],
