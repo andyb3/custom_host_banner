@@ -38,6 +38,7 @@ function banner_text() {
     var banner_text_input = document.createElement('input');
     banner_text_input.type = "text";
     banner_text_input.style.width = "300px";
+    banner_text_input.placeholder = "Enter text to be displayed on banner";
     return banner_text_input
 }
 
