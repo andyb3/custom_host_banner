@@ -1,6 +1,6 @@
 {
   "name": "Custom Host Banner",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Display a custom banner on the page based on the host.",
   "permissions": [
     "storage"
