@@ -6,10 +6,7 @@
     "storage"
   ],
   "background": {
-    "scripts": [
-      "background.js"
-    ],
-    "persistent": false
+    "service_worker": "service_worker.js"
   },
   "content_scripts": [
     {
@@ -25,7 +22,7 @@
       ]
     }
   ],
-  "browser_action": {
+  "action": {
     "default_popup": "options.html",
     "default_icon": {
       "16": "images/banner16.png",
