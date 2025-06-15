@@ -87,7 +87,7 @@ const createAddHostRow = (data) => {
     
     const buttonCell = document.createElement('td');
     const button = document.createElement('button');
-    button.innerText = "✓";
+    button.innerText = "\u2713";
     button.style.color = "green";
     
     button.addEventListener('click', async () => {
@@ -157,7 +157,7 @@ const createEditHostRow = (host, data) => {
     
     const buttonCell = document.createElement('td');
     const button = document.createElement('button');
-    button.innerText = "×";
+    button.innerText = "X";
     button.style.color = "red";
     button.addEventListener('click', async () => {
         try {
