@@ -1,10 +1,11 @@
-var default_hosts = {};
+// Constants
+const STORAGE_KEY = 'hosts';
 
-// On install or update,
-chrome.runtime.onInstalled.addListener(function () {
-    // Get existing hosts if already set from previous installation, or set as empty object if not
-    chrome.storage.sync.get({ hosts: default_hosts }, function (data) {
-        chrome.storage.sync.set({ hosts: data.hosts }, console.log("hosts set to " + data.hosts)
-        );
+// Initialize storage if empty
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.sync.get(STORAGE_KEY, (data) => {
+        if (!data.hosts) {
+            chrome.storage.sync.set({ [STORAGE_KEY]: {} });
+        }
     });
 });

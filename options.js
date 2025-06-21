@@ -1,166 +1,194 @@
-const COLOURS = ["red", "orange", "green", "blue", "pink", "purple", "black"]
+// Constants
+const COLOURS = ["red", "orange", "green", "blue", "pink", "purple", "black"];
+const DISPLAY_OPTIONS = ["insert", "on top"];
+const STORAGE_KEY = 'hosts';
 
-chrome.storage.sync.get(
-    'hosts', hosttable
-);
-
-function get_colour_dropdown(start_colour) {
-    // Creates colour picker dropdown
-    var dropdown = document.createElement('select');
-    for (colour of COLOURS) {
-        var option = document.createElement('option');
+// UI Elements
+const createColourDropdown = (startColour) => {
+    const dropdown = document.createElement('select');
+    COLOURS.forEach(colour => {
+        const option = document.createElement('option');
         option.text = colour;
         dropdown.add(option);
-        dropdown.value = start_colour;
-        dropdown.style.backgroundColor = start_colour;
-        dropdown.style.color = "white";
-        dropdown.addEventListener("change", function () {
-            dropdown.style.backgroundColor = dropdown.value;
-        })
-    }
+    });
+    
+    dropdown.value = startColour;
+    dropdown.style.backgroundColor = startColour;
+    dropdown.style.color = "white";
+    
+    dropdown.addEventListener("change", () => {
+        dropdown.style.backgroundColor = dropdown.value;
+    });
+    
     return dropdown;
-}
+};
 
-function get_display_dropdown(start_value) {
-    // creates display option dropdown
-    var dropdown = document.createElement('select');
-    for (choice of ["insert", "on top"]) {
-        var option = document.createElement('option');
-        option.text = choice;
-        dropdown.add(option);
-    }
-    dropdown.value = start_value;
+const createDisplayDropdown = (startValue) => {
+    const dropdown = document.createElement('select');
+    DISPLAY_OPTIONS.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.text = option;
+        dropdown.add(optionElement);
+    });
+    dropdown.value = startValue;
     return dropdown;
-}
+};
 
-function banner_text() {
-    // creates banner text input
-    var banner_text_input = document.createElement('input');
-    banner_text_input.type = "text";
-    banner_text_input.style.width = "300px";
-    banner_text_input.placeholder = "Enter text to be displayed on banner";
-    return banner_text_input
-}
+const createBannerTextInput = (value = '') => {
+    const input = document.createElement('input');
+    input.type = "text";
+    input.style.width = "300px";
+    input.placeholder = "Enter text to be displayed on banner";
+    input.value = value;
+    return input;
+};
 
-function add_host_row(data) {
-    // creates row in table for user to add a new host
-    var new_row = document.createElement('tr');
-    // create text input cell for user to enter new host
-    var new_host_cell = document.createElement('td');
-    var new_host_text = document.createElement('input');
-    new_host_text.style.width = "250px";
-    new_host_text.type = "text";
-    new_host_text.placeholder = "Enter host or URL";
-    new_host_cell.appendChild(new_host_text);
-    // create text input cell for user to enter banner text
-    var banner_text_cell = document.createElement('td');
-    banner_text_cell.appendChild(banner_text());
-    // create dropdown for user to select banner colour
-    var colour_cell = document.createElement('td');
-    colour_cell.appendChild(get_colour_dropdown(COLOURS[0]));
-    // create dropdown for user to select banner display style
-    var display_cell = document.createElement('td');
-    display_cell.appendChild(get_display_dropdown("insert"));
-    // create button for user add the new host
-    var button_cell = document.createElement('td');
-    var button = document.createElement('button');
+// Host Management
+const extractHostFromUrl = (url) => {
+    try {
+        return url.replace(/(http:\/\/|https:\/\/)/, "").match(/([A-Za-z0-9-\.:]+)/)[0];
+    } catch (error) {
+        console.error('Invalid URL format:', error);
+        return null;
+    }
+};
+
+const saveHosts = (hosts) => {
+    return new Promise((resolve, reject) => {
+        chrome.storage.sync.set({ [STORAGE_KEY]: hosts }, () => {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve();
+            }
+        });
+    });
+};
+
+// Row Creation
+const createAddHostRow = (data) => {
+    const row = document.createElement('tr');
+    
+    const hostCell = document.createElement('td');
+    const hostInput = document.createElement('input');
+    hostInput.style.width = "250px";
+    hostInput.type = "text";
+    hostInput.placeholder = "Enter host or URL";
+    hostCell.appendChild(hostInput);
+    
+    const bannerTextCell = document.createElement('td');
+    bannerTextCell.appendChild(createBannerTextInput());
+    
+    const colourCell = document.createElement('td');
+    colourCell.appendChild(createColourDropdown(COLOURS[0]));
+    
+    const displayCell = document.createElement('td');
+    displayCell.appendChild(createDisplayDropdown(DISPLAY_OPTIONS[0]));
+    
+    const buttonCell = document.createElement('td');
+    const button = document.createElement('button');
     button.innerText = "\u2713";
     button.style.color = "green";
-    // add event listener to save new host config when clicked
-    button.addEventListener('click', function () {
-        // extract host from url
-        var new_host = new_host_text.value.replace(/(http:\/\/|https:\/\/)/, "").match(/([A-Za-z0-9-\.:]+)/)[0];
-        if (new_host) {
-            // save new host to hosts config
-            data.hosts[new_host] = {
-                "text": banner_text_cell.children[0].value,
-                "colour": colour_cell.children[0].value,
-                "display": display_cell.children[0].value.replace(" ", "_")
-            };
-            chrome.storage.sync.set({ hosts: data.hosts }, function () {
-                console.log("hosts set to " + data.hosts);
-            })
-            // refresh the page so new host appears in table
-            location.reload();
+    
+    button.addEventListener('click', async () => {
+        const newHost = extractHostFromUrl(hostInput.value);
+        if (newHost) {
+            try {
+                data.hosts[newHost] = {
+                    text: bannerTextCell.children[0].value,
+                    colour: colourCell.children[0].value,
+                    display: displayCell.children[0].value.replace(" ", "_")
+                };
+                await saveHosts(data.hosts);
+                location.reload();
+            } catch (error) {
+                console.error('Failed to save host:', error);
+            }
         }
     });
-    button_cell.appendChild(button);
-    // add elements to new row
-    new_row.appendChild(new_host_cell);
-    new_row.appendChild(colour_cell);
-    new_row.appendChild(banner_text_cell);
-    new_row.appendChild(display_cell);
-    new_row.appendChild(button_cell);
-    return new_row;  
-}
+    
+    buttonCell.appendChild(button);
+    
+    [hostCell, colourCell, bannerTextCell, displayCell, buttonCell].forEach(cell => row.appendChild(cell));
+    return row;
+};
 
-function edit_host_row(host, data) {
-    // creates row in table for user to edit config for existing host 
-    var host_row = document.createElement('tr');
-    // create cell to display the host
-    var host_cell = document.createElement('td');
-    host_cell.innerText = host;
-    // create dropdown for user to change banner colour
-    var colour_cell = document.createElement('td');
-    var colour_dropdown = get_colour_dropdown(data.hosts[host]["colour"]);
-    colour_dropdown.addEventListener("change", function () {
-        data.hosts[host]["colour"] = colour_dropdown.value;
-        chrome.storage.sync.set({ hosts: data.hosts }, function () {
-            console.log("hosts set to " + data.hosts);
-        })
-    })
-    colour_cell.appendChild(colour_dropdown);
-    // create dropdown for user to change banner display option
-    var display_cell = document.createElement('td');
-    var display_dropdown = get_display_dropdown(data.hosts[host]["display"].replace("_", " "));
-    display_dropdown.addEventListener("change", function () {
-        data.hosts[host]["display"] = display_dropdown.value.replace(" ", "_");
-        chrome.storage.sync.set({ hosts: data.hosts }, function () {
-            console.log("hosts set to " + data.hosts);
-        })
-    })
-    display_cell.appendChild(display_dropdown);
-    // create text input for user to edit the banner text
-    var banner_text_cell = document.createElement('td');
-    var banner_text_input = document.createElement('input');
-    banner_text_input = banner_text();
-    banner_text_input.value = data.hosts[host]["text"];
-    banner_text_input.addEventListener("blur", function () {
-        data.hosts[host]["text"] = banner_text_input.value;
-        chrome.storage.sync.set({ hosts: data.hosts }, function () {
-            console.log("hosts set to " + data.hosts);
-        })
-    })
-    banner_text_cell.appendChild(banner_text_input);
-    // create button for user to remove the host
-    var button_cell = document.createElement('td');
-    var button = document.createElement('button');
+const createEditHostRow = (host, data) => {
+    const row = document.createElement('tr');
+    
+    const hostCell = document.createElement('td');
+    hostCell.innerText = host;
+    
+    const colourCell = document.createElement('td');
+    const colourDropdown = createColourDropdown(data.hosts[host].colour);
+    colourDropdown.addEventListener("change", async () => {
+        try {
+            data.hosts[host].colour = colourDropdown.value;
+            await saveHosts(data.hosts);
+        } catch (error) {
+            console.error('Failed to update colour:', error);
+        }
+    });
+    colourCell.appendChild(colourDropdown);
+    
+    const bannerTextCell = document.createElement('td');
+    const bannerTextInput = createBannerTextInput(data.hosts[host].text);
+    bannerTextInput.addEventListener("blur", async () => {
+        try {
+            data.hosts[host].text = bannerTextInput.value;
+            await saveHosts(data.hosts);
+        } catch (error) {
+            console.error('Failed to update banner text:', error);
+        }
+    });
+    bannerTextCell.appendChild(bannerTextInput);
+    
+    const displayCell = document.createElement('td');
+    const displayDropdown = createDisplayDropdown(data.hosts[host].display.replace("_", " "));
+    displayDropdown.addEventListener("change", async () => {
+        try {
+            data.hosts[host].display = displayDropdown.value.replace(" ", "_");
+            await saveHosts(data.hosts);
+        } catch (error) {
+            console.error('Failed to update display option:', error);
+        }
+    });
+    displayCell.appendChild(displayDropdown);
+    
+    const buttonCell = document.createElement('td');
+    const button = document.createElement('button');
     button.innerText = "X";
     button.style.color = "red";
-    button.addEventListener('click', function () {
-        delete data.hosts[host];
-        chrome.storage.sync.set({ hosts: data.hosts }, function () {
-            console.log("hosts set to " + data.hosts);
-        })
-        // refresh the page so deleted host is not shown in table
-        location.reload();
-    });
-    button_cell.appendChild(button);
-    // add elements to new row
-    host_row.appendChild(host_cell);
-    host_row.appendChild(colour_cell);
-    host_row.appendChild(banner_text_cell);
-    host_row.appendChild(display_cell);
-    host_row.appendChild(button_cell);
-    return host_row;
-}
-
-function hosttable(data) {
-        var host_table = document.getElementById("host-table");
-        // for each host, display a row in the table that allows user to see and edit the config
-        for (host in data.hosts) {
-            host_table.appendChild(edit_host_row(host, data));
+    button.addEventListener('click', async () => {
+        try {
+            delete data.hosts[host];
+            await saveHosts(data.hosts);
+            location.reload();
+        } catch (error) {
+            console.error('Failed to delete host:', error);
         }
-        // add a row to bottom of table where user can create a banner for a new host
-        host_table.appendChild(add_host_row(data));
+    });
+    buttonCell.appendChild(button);
+    
+    [hostCell, colourCell, bannerTextCell, displayCell, buttonCell].forEach(cell => row.appendChild(cell));
+    return row;
+};
+
+// Initialize
+const initializeHostTable = (data) => {
+    const hostTable = document.getElementById("host-table");
+    
+    Object.keys(data.hosts).forEach(host => {
+        hostTable.appendChild(createEditHostRow(host, data));
+    });
+    
+    hostTable.appendChild(createAddHostRow(data));
+};
+
+// Load initial data
+chrome.storage.sync.get(STORAGE_KEY, (data) => {
+    if (!data.hosts) {
+        data.hosts = {};
     }
+    initializeHostTable(data);
+});
