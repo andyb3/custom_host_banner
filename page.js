@@ -41,14 +41,41 @@ const overlayBanner = (banner) => {
     };
 };
 
+// Host Matching
+const findMatchingHost = (hosts, currentHost) => {
+    for (const [pattern, config] of Object.entries(hosts)) {
+        if (config.isRegex) {
+            try {
+                const regex = new RegExp(pattern);
+                if (regex.test(currentHost)) {
+                    return config;
+                }
+            } catch (error) {
+                console.error('Invalid regex pattern:', pattern, error);
+                continue;
+            }
+        } else {
+            // Exact match
+            if (pattern === currentHost) {
+                return config;
+            }
+        }
+    }
+    return null;
+};
+
 // Main Function
 const addBanner = (data) => {
     try {
-        if (!data.hosts || !(location.host in data.hosts)) {
+        if (!data.hosts || Object.keys(data.hosts).length === 0) {
             return;
         }
 
-        const hostConfig = data.hosts[location.host];
+        const hostConfig = findMatchingHost(data.hosts, location.host);
+        if (!hostConfig) {
+            return;
+        }
+
         const banner = createBanner(hostConfig.text, hostConfig.colour);
         
         document.body.insertBefore(banner, document.body.childNodes[0]);

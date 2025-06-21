@@ -43,6 +43,13 @@ const createBannerTextInput = (value = '') => {
     return input;
 };
 
+const createRegexCheckbox = (checked = false) => {
+    const checkbox = document.createElement('input');
+    checkbox.type = "checkbox";
+    checkbox.checked = checked;
+    return checkbox;
+};
+
 // Host Management
 const extractHostFromUrl = (url) => {
     try {
@@ -73,8 +80,11 @@ const createAddHostRow = (data) => {
     const hostInput = document.createElement('input');
     hostInput.style.width = "250px";
     hostInput.type = "text";
-    hostInput.placeholder = "Enter host or URL";
+    hostInput.placeholder = "Enter host, URL, or regex pattern";
     hostCell.appendChild(hostInput);
+    
+    const regexCell = document.createElement('td');
+    regexCell.appendChild(createRegexCheckbox());
     
     const bannerTextCell = document.createElement('td');
     bannerTextCell.appendChild(createBannerTextInput());
@@ -91,25 +101,49 @@ const createAddHostRow = (data) => {
     button.style.color = "green";
     
     button.addEventListener('click', async () => {
-        const newHost = extractHostFromUrl(hostInput.value);
-        if (newHost) {
-            try {
-                data.hosts[newHost] = {
-                    text: bannerTextCell.children[0].value,
-                    colour: colourCell.children[0].value,
-                    display: displayCell.children[0].value.replace(" ", "_")
-                };
-                await saveHosts(data.hosts);
-                location.reload();
-            } catch (error) {
-                console.error('Failed to save host:', error);
+        const isRegex = regexCell.children[0].checked;
+        let newHost;
+        
+        if (isRegex) {
+            // For regex, use the pattern as-is
+            newHost = hostInput.value.trim();
+            if (!newHost) {
+                alert('Please enter a regex pattern');
+                return;
             }
+            // Test if the regex is valid
+            try {
+                new RegExp(newHost);
+            } catch (error) {
+                alert('Invalid regex pattern: ' + error.message);
+                return;
+            }
+        } else {
+            // For regular hosts, extract the hostname
+            newHost = extractHostFromUrl(hostInput.value);
+            if (!newHost) {
+                alert('Please enter a valid host or URL');
+                return;
+            }
+        }
+        
+        try {
+            data.hosts[newHost] = {
+                text: bannerTextCell.children[0].value,
+                colour: colourCell.children[0].value,
+                display: displayCell.children[0].value.replace(" ", "_"),
+                isRegex: isRegex
+            };
+            await saveHosts(data.hosts);
+            location.reload();
+        } catch (error) {
+            console.error('Failed to save host:', error);
         }
     });
     
     buttonCell.appendChild(button);
     
-    [hostCell, colourCell, bannerTextCell, displayCell, buttonCell].forEach(cell => row.appendChild(cell));
+    [hostCell, regexCell, colourCell, bannerTextCell, displayCell, buttonCell].forEach(cell => row.appendChild(cell));
     return row;
 };
 
@@ -118,6 +152,18 @@ const createEditHostRow = (host, data) => {
     
     const hostCell = document.createElement('td');
     hostCell.innerText = host;
+    
+    const regexCell = document.createElement('td');
+    const regexCheckbox = createRegexCheckbox(data.hosts[host].isRegex || false);
+    regexCheckbox.addEventListener("change", async () => {
+        try {
+            data.hosts[host].isRegex = regexCheckbox.checked;
+            await saveHosts(data.hosts);
+        } catch (error) {
+            console.error('Failed to update regex setting:', error);
+        }
+    });
+    regexCell.appendChild(regexCheckbox);
     
     const colourCell = document.createElement('td');
     const colourDropdown = createColourDropdown(data.hosts[host].colour);
@@ -170,7 +216,7 @@ const createEditHostRow = (host, data) => {
     });
     buttonCell.appendChild(button);
     
-    [hostCell, colourCell, bannerTextCell, displayCell, buttonCell].forEach(cell => row.appendChild(cell));
+    [hostCell, regexCell, colourCell, bannerTextCell, displayCell, buttonCell].forEach(cell => row.appendChild(cell));
     return row;
 };
 
